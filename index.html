@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SMAPA-LIB | Genji Final</title>
+   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <script>
+    tailwind.config = { darkMode: 'class', theme: { extend: { colors: { smapa: '#0ea5e9' }, borderRadius: { 'smapa': '1.5rem' } } } }
+  </script>
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; transition: 0.3s; }
+    .hide-scroll::-webkit-scrollbar { display: none; }
+    .mystery-blur { filter: blur(12px) grayscale(100%); }
+    .badge { @apply text-[9px] font-black uppercase px-2 py-1 rounded-lg border; }
+    .b-diajukan { @apply bg-yellow-50 text-yellow-600 border-yellow-200; }
+    .b-diproses { @apply bg-blue-50 text-blue-600 border-blue-200; }
+    .b-dipinjam { @apply bg-purple-50 text-purple-600 border-purple-200; }
+    .b-selesai { @apply bg-green-50 text-green-600 border-green-200; }
+  </style>
+  <style id="warna-smapa">
+  :root {
+    --bg-smapa: #f8fafc; /* Warna Terang */
+    --text-smapa: #0f172a;
+    --card-smapa: #ffffff;
+  }
+  .dark {
+    --bg-smapa: #020617; /* Warna Gelap */
+    --text-smapa: #f8fafc;
+    --card-smapa: #0f172a;
+  }
+  /* Paksa Body Mengikuti Variabel */
+  body { 
+    background-color: var(--bg-smapa) !important; 
+    color: var(--text-smapa) !important; 
+    transition: 0.5s;
+  }
+  /* Paksa Kartu Buku Mengikuti Variabel (Jika ada class bg-white) */
+  .bg-white, .dark\:bg-slate-900 { 
+    background-color: var(--card-smapa) !important; 
+  }
+</style>
+
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+</head>
+<body class="bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 min-h-screen pb-20 white:text-slate-100">
+
+  <nav class="fixed top-0 w-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-md z-50 border-b border-slate-200 dark:border-slate-800 px-6 py-4 flex justify-between items-center shadow-sm">
+    <div class="flex items-center gap-2">
+      <div class="w-8 h-8 bg-smapa rounded-lg shadow-lg">
+          <img src="i.png" class="w-10 h-10 object-contain" alt="Logo">
+      </div>
+      <h1 class="font-black text-black tracking-tighter uppercase">SMAPA-LIB</h1>
+    </div>
+    <div class="flex items-center gap-3">
+      
+      <button onclick="f_mode_smapa()" class="relative w-12 h-6 rounded-full bg-slate-300 transition-all p-1 shadow-inner overflow-hidden">
+  <div id="bola-tema" class="w-4 h-4 bg-white rounded-full transition-transform duration-500 flex items-center justify-center text-[10px]">
+    🌙
+  </div>
+</button>
+
+      
+      <div id="nav-actions"></div>
+    </div>
+  </nav>
+
+  <div id="loading" class="fixed inset-0 bg-white/90 dark:bg-slate-950/90 z-[100] hidden flex-col items-center justify-center">
+    <div class="w-12 h-12 border-4 border-smapa border-t-transparent rounded-full animate-spin"></div>
+    <p class="mt-4 font-black text-smapa tracking-widest uppercase text-xs">Memproses...</p>
+  </div>
+
+  <div id="login-view" class="flex flex-col items-center justify-center min-h-screen p-6">
+    <div class="w-full max-w-[380px] bg-white dark:bg-slate-900 p-8 rounded-smapa shadow-2xl border dark:border-slate-800">
+      <div class="flex mb-8 bg-slate-100 dark:bg-slate-800 p-1 rounded-2xl">
+        <button onclick="toggleAuth('login')" id="tab-l" class="w-1/2 py-2 rounded-xl font-bold text-smapa bg-white dark:bg-slate-700 shadow-sm transition-all">MASUK</button>
+        <button onclick="toggleAuth('register')" id="tab-r" class="w-1/2 py-2 rounded-xl font-bold text-slate-400 transition-all">DAFTAR</button>
+      </div>
+      <div class="space-y-3">
+        <div id="reg-fields" class="hidden"><input type="text" id="f-name" placeholder="Nama Lengkap" class="w-full p-4 rounded-xl bg-slate-50 dark:bg-slate-800 outline-none focus:ring-2 focus:ring-smapa"></div>
+        <input type="tel" id="f-phone" placeholder="WhatsApp (08...)" class="w-full p-4 rounded-xl bg-slate-50 dark:bg-slate-800 outline-none focus:ring-2 focus:ring-smapa">
+        <input type="password" id="f-pass" placeholder="Password" class="w-full p-4 rounded-xl bg-slate-50 dark:bg-slate-800 outline-none focus:ring-2 focus:ring-smapa">
+        <button onclick="handleAuth()" class="w-full bg-smapa font-black py-4 rounded-2xl shadow-xl mt-4 active:scale-95 transition-transform">AKSES SEKARANG</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="user-view" class="hidden pt-24 px-6 max-w-6xl mx-auto space-y-8 animate-[slideUp_0.4s_ease]">
+    <div id="leaderboard" class="flex gap-3 overflow-x-auto pb-2 hide-scroll"></div>
+    <div id="mystery-box"></div>
+    
+    <div class="flex gap-4 border-b border-slate-200 dark:border-slate-800 font-bold text-sm">
+      <button onclick="switchTab('books-cont', this)" class="u-tab py-2 border-b-2 border-smapa text-smapa">📚 KOLEKSI BUKU</button>
+      <button onclick="switchTab('news-cont', this)" class="u-tab py-2 text-slate-400">📰 NEWSPAPER</button>
+    </div>
+
+    <div id="books-cont" class="t-view">
+      <div class="mb-6"><input type="text" id="q-book" onkeyup="renderBooks()" placeholder="🔍 Cari Judul/Penulis..." class="w-full p-4 rounded-2xl bg-white dark:bg-slate-900 outline-none shadow-sm border border-slate-100 dark:border-slate-800"></div>
+      <h3 class="font-black mb-4">🔥 Trending (Geser)</h3>
+      <div id="book-scroll" class="flex gap-4 overflow-x-auto hide-scroll pb-4"></div>
+      <h3 class="font-black mb-4 mt-6">✨ Semua Koleksi</h3>
+      <div id="book-grid" class="grid grid-cols-2 md:grid-cols-5 gap-4"></div>
+    </div>
+
+    <div id="news-cont" class="t-view hidden">
+      <div id="news-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
+    </div>
+  </div>
+
+  <div id="admin-view" class="hidden pt-24 px-6 max-w-7xl mx-auto animate-[slideUp_0.4s_ease]">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      
+      <div class="lg:col-span-4 space-y-6">
+        <div class="bg-white dark:bg-slate-900 p-6 rounded-smapa shadow-xl border-t-4 border-smapa">
+          <h3 class="font-black text-smapa mb-4 uppercase text-sm">📚 Tambah Buku Lengkap</h3>
+          <div class="space-y-3">
+            <input type="text" id="a-title" placeholder="Judul Buku" class="w-full p-3 bg-slate-50 dark:bg-slate-800 rounded-xl outline-none text-sm">
+            <input type="text" id="a-author" placeholder="Penulis" class="w-full p-3 bg-slate-50 dark:bg-slate-800 rounded-xl outline-none text-sm">
+            <input type="text" id="a-pub" placeholder="Penerbit" class="w-full p-3 bg-slate-50 dark:bg-slate-800 rounded-xl outline-none text-sm">
+            <div class="flex gap-2">
+              <input type="number" id="a-year" placeholder="Tahun" class="w-1/2 p-3 bg-slate-50 dark:bg-slate-800 rounded-xl outline-none text-sm">
+              <select id="a-cat" class="w-1/2 p-3 bg-slate-50 dark:bg-slate-800 rounded-xl outline-none text-sm">
+                <option value="Kelas 10">Kls 10</option><option value="Kelas 11">Kls 11</option><option value="Kelas 12">Kls 12</option>
+              </select>
+            </div>
+            <textarea id="a-desc" placeholder="Deskripsi Singkat / Clue Misteri" class="w-full p-3 bg-slate-50 dark:bg-slate-800 rounded-xl outline-none text-sm h-20"></textarea>
+            <input type="text" id="a-drive" placeholder="ID Drive PDF" class="w-full p-3 bg-slate-50 dark:bg-slate-800 rounded-xl outline-none text-sm">
+            <div class="flex items-center gap-2 p-2">
+              <input type="checkbox" id="a-mystery" class="w-5 h-5"><label class="text-xs font-bold">Jadikan "Mystery Book"</label>
+            </div>
+            <label class="block text-[10px] font-black text-slate-400">UPLOAD COVER (JPG)</label>
+            <input type="file" id="a-cover" class="text-xs w-full mb-2">
+            <button onclick="addBook()" class="w-full bg-smapa text-white font-black py-3 rounded-xl shadow-lg hover:bg-smapa-dark">SIMPAN KE DATABASE</button>
+          </div>
+        </div>
+
+        <div class="bg-white dark:bg-slate-900 p-6 rounded-smapa shadow-xl border-t-4 border-pink-500">
+          <h3 class="font-black text-pink-500 mb-4 uppercase text-sm">📰 Update News</h3>
+          <div class="space-y-3">
+            <select id="n-platform" class="w-full p-3 bg-slate-50 dark:bg-slate-800 rounded-xl text-sm outline-none"><option value="instagram">Instagram</option><option value="tiktok">TikTok</option></select>
+            <input type="text" id="n-link" placeholder="Link Postingan" class="w-full p-3 bg-slate-50 dark:bg-slate-800 rounded-xl text-sm outline-none">
+            <input type="text" id="n-cap" placeholder="Caption Singkat" class="w-full p-3 bg-slate-50 dark:bg-slate-800 rounded-xl text-sm outline-none">
+            <button onclick="addNews()" class="w-full bg-pink-500 text-white font-black py-3 rounded-xl shadow-lg">POST KE MADING</button>
+          </div>
+        </div>
+
+        <div class="bg-blue-50 dark:bg-slate-900 p-6 rounded-smapa border-l-4 border-blue-500 shadow-xl">
+          <h3 class="font-black text-blue-600 mb-4 text-sm">➕ PINJAM MANUAL</h3>
+          <input type="text" id="m-nis" placeholder="NIS" class="w-full p-3 mb-2 rounded-xl bg-white dark:bg-slate-800 text-sm outline-none">
+          <input type="tel" id="m-phone" placeholder="WA (08...)" class="w-full p-3 mb-2 rounded-xl bg-white dark:bg-slate-800 text-sm outline-none">
+          <select id="m-book" class="w-full p-3 mb-4 rounded-xl bg-white dark:bg-slate-800 text-sm outline-none"></select>
+          <button onclick="manualBorrow()" class="w-full bg-blue-600 text-white font-bold py-3 rounded-xl shadow-md">CATAT OFFLINE</button>
+        </div>
+      </div>
+
+      <div class="lg:col-span-8 space-y-6">
+        <div class="bg-white dark:bg-slate-900 p-6 rounded-smapa shadow-xl overflow-x-auto">
+          <h3 class="font-black mb-4 uppercase text-sm">📋 Pengajuan & Pinjaman</h3>
+          <table class="w-full text-left text-xs whitespace-nowrap">
+            <thead class="bg-slate-50 dark:bg-slate-800">
+              <tr><th class="p-3 rounded-l-xl">SISWA</th><th class="p-3">BUKU</th><th class="p-3 text-center">STATUS</th><th class="p-3 text-right rounded-r-xl">AKSI</th></tr>
+            </thead>
+            <tbody id="admin-table-body" class="divide-y divide-slate-100 dark:divide-slate-800"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div id="modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-[100] hidden flex-col items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 w-full max-w-xl rounded-smapa shadow-2xl p-6 overflow-y-auto max-h-[90vh]">
+      <div class="flex justify-between items-center mb-4">
+        <h2 id="md-title" class="font-black text-lg uppercase text-smapa"></h2><button onclick="closeModal()" class="text-3xl font-bold hover:text-red-500">×</button>
+      </div>
+      
+      <div id="md-actions" class="grid grid-cols-2 gap-3 mb-6 hidden">
+        <button id="btn-read" class="bg-green-500 text-white font-black py-3 rounded-xl shadow-lg">📖 BACA ONLINE</button>
+        <a id="btn-down" href="#" target="_blank" class="bg-blue-500 text-white font-black py-3 rounded-xl text-center shadow-lg">📥 PDF</a>
+      </div>
+      <div id="iframe-box" class="hidden mb-6"><iframe id="md-iframe" class="w-full h-[400px] border rounded-xl shadow-inner"></iframe></div>
+
+      <div class="bg-slate-50 dark:bg-slate-800 p-5 rounded-2xl border border-slate-100 dark:border-slate-700">
+        <h4 class="text-[10px] font-black text-slate-400 mb-3 tracking-widest">FORM PENGAJUAN (7 HARI)</h4>
+        <input type="text" id="md-nis" placeholder="Masukkan NIS" class="w-full p-4 rounded-xl bg-white dark:bg-slate-700 outline-none mb-3">
+        <button onclick="submitBorrow()" class="w-full bg-smapa text-white font-black py-4 rounded-xl shadow-lg w-full">AJUKAN PINJAM FISIK</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // =======================================================
+    // 1. MASUKKAN LINK WEB APP APLIKASI GOOGLE SCRIPT DI SINI
+    // =======================================================
+    const API_URL = "https://script.google.com/macros/s/AKfycbzknQmHFNe2eY-CCeAk6MJMB4LCBTSkvQjS5yYKEn-FoL3vq41sZ8NR3ODY1na9prBT/exec";
+    
+    let authMode = 'login', user = JSON.parse(localStorage.getItem('smapa_user')), dataCache = {};
+    let activeBookId = null;
+
+    // --- UI FUNCTIONS ---
+    function showLoading(s) { document.getElementById('loading').style.display = s ? 'flex' : 'none'; }
+    function switchTab(id, btn) {
+      document.querySelectorAll('.t-view').forEach(e => e.classList.add('hidden')); document.getElementById(id).classList.remove('hidden');
+      document.querySelectorAll('.u-tab').forEach(e => { e.classList.remove('text-smapa','border-b-2','border-smapa'); e.classList.add('text-slate-400'); });
+      btn.classList.add('text-smapa','border-b-2','border-smapa');
+    }
+    function toggleAuth(mode) {
+      authMode = mode;
+      document.getElementById('tab-l').className = mode==='login' ? "w-1/2 py-2 rounded-xl font-bold text-smapa bg-white dark:bg-slate-700 shadow-sm" : "w-1/2 py-2 rounded-xl font-bold text-slate-400";
+      document.getElementById('tab-r').className = mode==='register' ? "w-1/2 py-2 rounded-xl font-bold text-smapa bg-white dark:bg-slate-700 shadow-sm" : "w-1/2 py-2 rounded-xl font-bold text-slate-400";
+      document.getElementById('reg-fields').classList.toggle('hidden', mode==='login');
+    }
+
+    // --- SYSTEM ROUTER (BULLETPROOF) ---
+    function route() {
+      // Sembunyikan semua layar pakai class "hidden" Tailwind (100% aman dari bentrok flex)
+      document.getElementById('login-view').classList.add('hidden');
+      document.getElementById('login-view').classList.remove('flex'); // Matikan flex
+      document.getElementById('user-view').classList.add('hidden');
+      document.getElementById('admin-view').classList.add('hidden');
+      
+      if(!user) {
+        document.getElementById('nav-actions').innerHTML = '';
+        document.getElementById('login-view').classList.remove('hidden');
+        document.getElementById('login-view').classList.add('flex'); // Nyalakan flex
+        return;
+      }
+      
+      document.getElementById('nav-actions').innerHTML = `<button onclick="logout()" class="text-red-500 font-bold text-[10px] border border-red-200 dark:border-red-900 px-3 py-1 rounded-lg uppercase">Keluar</button>`;
+      loadData();
+    }
+
+    function logout() { localStorage.removeItem('smapa_user'); user = null; route(); }
+
+    // --- API CALLS (PAKAI FETCH KE API_URL) ---
+    async function api(payload) {
+      const res = await fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain;charset=utf-8'}, body: JSON.stringify(payload) });
+      return await res.json();
+    }
+
+    async function handleAuth() {
+      const ph = document.getElementById('f-phone').value, ps = document.getElementById('f-pass').value, nm = document.getElementById('f-name').value;
+      if(!ph || !ps) return alert("WA & Password wajib diisi!");
+      showLoading(true);
+      try {
+        const res = await api({ action: authMode, phone: ph, password: ps, name: nm });
+        showLoading(false);
+        if(res.status === 'success') {
+          if(authMode === 'login') { user = res.data; localStorage.setItem('smapa_user', JSON.stringify(user)); route(); }
+          else { alert('Daftar Sukses! Silakan Login'); toggleAuth('login'); document.getElementById('f-pass').value = ''; }
+        } else alert(res.message);
+      } catch(e) { showLoading(false); alert("Error Koneksi API"); }
+    }
+
+    async function loadData() {
+      showLoading(true);
+      try {
+        const [bk, ur, br, nw, ld] = await Promise.all([
+          fetch(API_URL+"?action=getBooks").then(r=>r.json()), fetch(API_URL+"?action=getUsers").then(r=>r.json()),
+          fetch(API_URL+"?action=getBorrowings").then(r=>r.json()), fetch(API_URL+"?action=getNews").then(r=>r.json()),
+          fetch(API_URL+"?action=getLeaderboard").then(r=>r.json())
+        ]);
+        dataCache = { books: bk.data, users: ur.data, borrows: br.data, news: nw.data, leaderboard: ld.data };
+        showLoading(false);
+        if(user.role === 'admin') { document.getElementById('admin-view').classList.remove('hidden'); renderAdmin(); }
+        else { document.getElementById('user-view').classList.remove('hidden'); renderUser(); }
+      } catch(e) { showLoading(false); alert("Gagal memuat data dari server."); }
+    }
+
+    // --- RENDERING ---
+    function renderUser() {
+      const {books, news, leaderboard} = dataCache;
+      document.getElementById('leaderboard').innerHTML = leaderboard.map((u,i) => `<div class="bg-white dark:bg-slate-800 p-3 rounded-2xl min-w-[120px] shadow-sm border border-slate-100 dark:border-slate-700 text-center"><div class="text-[8px] opacity-50 font-black">RANK #${i+1}</div><div class="font-bold text-xs truncate">${u.name}</div><div class="text-[10px] text-smapa font-black">${u.points} PTS</div></div>`).join('');
+      
+      const mb = books.find(b => b.is_mystery);
+      if(mb) document.getElementById('mystery-box').innerHTML = `<div class="bg-gradient-to-br from-slate-900 to-black p-6 rounded-smapa flex gap-6 text-white shadow-xl mb-10 overflow-hidden relative"><div class="absolute right-[-10px] top-[-10px] text-6xl font-black opacity-10 text-smapa">MYSTERY</div><img src="${mb.cover_base64 || 'https://via.placeholder.com/150'}" class="w-24 h-32 object-cover rounded-xl mystery-blur shadow-2xl"><div class="z-10"><h3 class="font-black text-xl mb-1">Blind Date with a Book</h3><p class="text-xs text-slate-400 italic mb-4 line-clamp-2">"${mb.description || 'Misteri bulan ini!'}"</p><button onclick="openModal('${mb.id}')" class="bg-white text-black text-xs font-black px-6 py-2 rounded-xl hover:scale-105 transition">PINJAM SAYA</button></div></div>`;
+      else document.getElementById('mystery-box').innerHTML = "";
+      
+      renderBooks(); renderNews();
+    }
+
+    function renderBooks() {
+      const q = (document.getElementById('q-book').value || '').toLowerCase();
+      const filtered = dataCache.books.filter(b => !b.is_mystery && ((b.title||'').toLowerCase().includes(q) || (b.author||'').toLowerCase().includes(q)));
+      const genCard = (b) => `<div onclick="openModal('${b.id}')" class="min-w-[140px] bg-white dark:bg-slate-900 p-3 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 cursor-pointer hover:scale-105 transition"><img src="${b.cover_base64||'https://via.placeholder.com/150'}" class="w-full h-36 object-cover rounded-xl mb-2"><h4 class="text-xs font-bold line-clamp-1">${b.title}</h4><p class="text-[9px] opacity-60 line-clamp-1">${b.author||'-'}</p></div>`;
+      document.getElementById('book-scroll').innerHTML = filtered.map(genCard).join('');
+      document.getElementById('book-grid').innerHTML = filtered.map(genCard).join('');
+    }
+
+    function renderNews() {
+      document.getElementById('news-grid').innerHTML = dataCache.news.map(n => {
+        let embed = n.platform==='instagram'?`<iframe src="${n.link.split('?')[0]}embed" class="w-full h-[350px] rounded-xl border-none"></iframe>` : `<a href="${n.link}" target="_blank" class="text-smapa font-bold">Buka Link TikTok</a>`;
+        return `<div class="bg-white dark:bg-slate-900 p-4 rounded-smapa shadow-sm border border-slate-100 dark:border-slate-800"><div class="badge b-diproses mb-3">${n.platform}</div>${embed}<p class="mt-2 text-xs italic">${n.caption||''}</p></div>`;
+      }).join('');
+    }
+
+    function renderAdmin() {
+      document.getElementById('m-book').innerHTML = `<option value="">Pilih Buku...</option>` + dataCache.books.map(x => `<option value="${x.id}">${x.title}</option>`).join('');
+      document.getElementById('admin-table-body').innerHTML = dataCache.borrows.map(h => {
+        const usr = dataCache.users.find(x => x.id === h.user_id) || { name: 'Siswa Offline', phone: String(h.user_id).split('_')[1] };
+        const bk = dataCache.books.find(x => x.id === h.book_id) || { title: 'Buku Dihapus' };
+        let act = h.status==='Diajukan'?`<button onclick="upStat('${h.id}','Diproses','${h.user_id}')" class="bg-smapa text-white px-2 py-1.5 rounded-lg text-[9px] font-bold shadow">TERIMA</button>`:
+                  h.status==='Diproses'?`<button onclick="upStat('${h.id}','Dipinjam','${h.user_id}')" class="bg-purple-500 text-white px-2 py-1.5 rounded-lg text-[9px] font-bold shadow">SERAHKAN</button>`:
+                  h.status==='Dipinjam'?`<button onclick="upStat('${h.id}','Selesai','${h.user_id}')" class="bg-green-600 text-white px-2 py-1.5 rounded-lg text-[9px] font-bold shadow">KEMBALI</button>`:"";
+        let wa = h.status==='Dipinjam'?`<button onclick="tagihWA('${usr.phone}','${usr.name}','${h.nis}','${bk.title}','${h.duration_days}')" class="ml-1 bg-red-500 text-white px-2 py-1.5 rounded-lg text-[9px] font-bold shadow">🚨 WA</button>`:"";
+        return `<tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50"><td class="p-3 border-b border-slate-100 dark:border-slate-800"><b>${usr.name}</b><br><span class="text-[9px] opacity-50">${usr.phone}</span></td><td class="p-3 text-xs font-bold text-smapa border-b border-slate-100 dark:border-slate-800">${bk.title}</td><td class="p-3 text-center border-b border-slate-100 dark:border-slate-800"><span class="badge b-${(h.status||'').toLowerCase()}">${h.status}</span></td><td class="p-3 text-right border-b border-slate-100 dark:border-slate-800">${act}${wa}</td></tr>`;
+      }).join('');
+    }
+
+    // --- ACTIONS ---
+    async function addBook() {
+      showLoading(true);
+      const f = document.getElementById('a-cover').files[0];
+      let b64 = ""; if(f) b64 = await new Promise(r => { const rd=new FileReader(); rd.onload=e=>r(e.target.result); rd.readAsDataURL(f); });
+      await api({ action:'addBook', role:'admin', title:document.getElementById('a-title').value, author:document.getElementById('a-author').value, publisher:document.getElementById('a-pub').value, year:document.getElementById('a-year').value, category:document.getElementById('a-cat').value, description:document.getElementById('a-desc').value, drive_id:document.getElementById('a-drive').value, is_mystery:document.getElementById('a-mystery').checked, cover_base64:b64 });
+      alert('Tersimpan!'); loadData();
+    }
+    async function addNews() {
+      showLoading(true);
+      await api({ action:'addNews', role:'admin', platform:document.getElementById('n-platform').value, link:document.getElementById('n-link').value, caption:document.getElementById('n-cap').value });
+      alert('Mading Diupdate!'); loadData();
+    }
+    async function manualBorrow() {
+      showLoading(true);
+      await api({ action:'manualBorrow', role:'admin', nis:document.getElementById('m-nis').value, phone:document.getElementById('m-phone').value, book_id:document.getElementById('m-book').value, duration:'7 Hari' });
+      alert('Tercatat!'); loadData();
+    }
+    async function upStat(id, s, u) { showLoading(true); await api({ action:'updateStatus', role:'admin', id:id, new_status:s, user_id:u }); loadData(); }
+    
+    function tagihWA(phone, name, nis, title, dur) {
+      let cp = String(phone).startsWith('0') ? '62'+String(phone).substring(1) : phone;
+      window.open(`https://wa.me/${cp}?text=${encodeURIComponent(`Halo ${name}, buku "${title}" batas waktu pinjam (${dur}) telah berakhir. Mohon dikembalikan!`)}`, '_blank');
+    }
+
+    // --- MODAL ---
+    function openModal(id) {
+      activeBookId = id; const b = dataCache.books.find(x=>x.id===id);
+      document.getElementById('md-title').innerText = b.title;
+      document.getElementById('md-actions').classList.toggle('hidden', !b.drive_id || b.is_mystery);
+      if(b.drive_id && !b.is_mystery) {
+        document.getElementById('btn-down').href = `https://drive.google.com/uc?export=download&id=${b.drive_id}`;
+        document.getElementById('btn-read').onclick = () => { document.getElementById('iframe-box').classList.remove('hidden'); document.getElementById('md-iframe').src = `https://drive.google.com/file/d/${b.drive_id}/preview`; };
+      }
+      document.getElementById('modal').classList.remove('hidden');
+      document.getElementById('modal').classList.add('flex');
+    }
+    function closeModal() { document.getElementById('modal').classList.add('hidden'); document.getElementById('modal').classList.remove('flex'); document.getElementById('md-iframe').src=""; document.getElementById('iframe-box').classList.add('hidden'); }
+    async function submitBorrow() {
+      showLoading(true);
+      await api({ action:'borrowBook', user_id:user.id, book_id:activeBookId, nis:document.getElementById('md-nis').value, duration:'7 Hari' });
+      alert('Pengajuan Dikirim!'); closeModal(); loadData();
+    }
+
+    // Boot
+    route();
+  </script>
+  
+  <script>
+  function f_mode_smapa() {
+    const html = document.documentElement;
+    const bola = document.getElementById('bola-tema');
+    
+    // Toggle Class Dark
+    const isDark = html.classList.toggle('dark');
+    
+    // Simpan Permanen
+    localStorage.setItem('tema_final_smapa', isDark ? 'dark' : 'light');
+    
+    // Update Visual Bola
+    if (isDark) {
+      bola.style.transform = "translateX(24px)";
+      bola.innerText = "☀️";
+    } else {
+      bola.style.transform = "translateX(0px)";
+      bola.innerText = "🌙";
+    }
+    console.log("Mode Berhasil Diganti!");
+  }
+
+  // JALANKAN SAAT START
+  (function() {
+    const saved = localStorage.getItem('tema_final_smapa');
+    const mauGelap = saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    
+    if (mauGelap) {
+      document.documentElement.classList.add('dark');
+      setTimeout(() => {
+        const bola = document.getElementById('bola-tema');
+        if(bola) {
+          bola.style.transform = "translateX(24px)";
+          bola.innerText = "☀️";
+        }
+      }, 300);
+    }
+  })();
+</script>
+
+  
+</body>
+</html>
